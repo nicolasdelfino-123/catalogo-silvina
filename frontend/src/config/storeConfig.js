@@ -1,5 +1,5 @@
 export const storeConfig = {
-    storeName: " Estilo Fenix Perfumes",
+    storeName: " Store Perfumes",
 
     branding: {
         heroTitle: "Fragancias Árabes Exclusivas",
