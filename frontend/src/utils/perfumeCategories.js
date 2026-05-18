@@ -25,6 +25,19 @@ const normalizeCategoryLabel = (value = "") =>
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
+const getCategoryEmoji = (category = {}, name = "") => {
+    if (category.emoji) return category.emoji;
+
+    const normalized = normalizeCategoryLabel(name);
+    if (normalized.includes("femen")) return "🌸";
+    if (normalized.includes("mascul")) return "🖤";
+    if (normalized.includes("unisex")) return "✨";
+    if (normalized.includes("ray") || normalized.includes("gafa")) return "🕶️";
+    if (normalized.includes("ferrari") || normalized.includes("scuderia")) return "🏎️";
+    if (normalized.includes("perfume")) return "✨";
+    return "•";
+};
+
 const baseDefinitionById = Object.fromEntries(
     PERFUME_CATEGORY_ID_DEFINITIONS.map((category) => [category.id, category])
 );
@@ -48,6 +61,7 @@ const buildCategoryTree = (categories = [], parentId = null, level = 0) =>
                 id,
                 name,
                 slug,
+                emoji: getCategoryEmoji(category, name),
                 parentId,
                 level,
                 children,
@@ -60,6 +74,7 @@ const fallbackTree = PERFUME_CATEGORY_ID_DEFINITIONS.map((category) => ({
     id: category.id,
     name: category.fallbackName,
     slug: category.slug,
+    emoji: getCategoryEmoji(category, category.fallbackName),
     parentId: null,
     level: 0,
     children: [],

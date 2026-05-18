@@ -259,24 +259,14 @@ export default function Header() {
 
   const cartItemsCount = (store.cart || []).reduce((t, i) => t + (i.quantity || 0), 0);
 
-  // Categorías para el dropdown (coinciden con las del backend)
-  const categoryIcons = {
-    1: "✨",
-    2: "🕶️",
-    3: "✨",
-    6: "🕶️",
-    // 4: "🧴",
-    // 5: "🌸",
-    // 7: "🏷️",
-  };
   const productCategories = PERFUME_CATEGORY_TREE.map((category) => ({
     name: category.name,
     route: `/categoria/${category.slug}`,
-    icon: categoryIcons[category.id] || "•",
+    icon: category.emoji || "•",
     children: (category.children || []).map((child) => ({
       name: child.name,
       route: `/categoria/${child.slug}`,
-      icon: categoryIcons[child.id] || "•",
+      icon: child.emoji || "•",
     })),
   }));
   const activeProductCategory =

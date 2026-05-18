@@ -407,6 +407,11 @@ const clearPricingInputs = (state) => ({
     price_wholesale: "",
 });
 
+const isParentCategoryId = (categoryId) => {
+    const category = PERFUME_CATEGORY_DEFINITIONS.find((item) => Number(item.id) === Number(categoryId));
+    return Boolean(category?.children?.length);
+};
+
 // ----- Componente principal -----
 export default function AdminProducts() {
     const [products, setProducts] = useState([])
@@ -930,6 +935,12 @@ export default function AdminProducts() {
             const currentProductId = form.id ? Number(form.id) : null;
             const wasFeatured = currentProductId ? featuredProductIds.includes(currentProductId) : false;
             const wantsFeatured = Boolean(form.show_on_home);
+
+            if (isParentCategoryId(form.category_id)) {
+                alert("Debes seleccionar una subcategoría. Perfumes y Gafas son categorías generales.");
+                return;
+            }
+
             if (
                 wantsFeatured &&
                 !wasFeatured &&
@@ -1332,7 +1343,7 @@ export default function AdminProducts() {
                         <option value={HOME_CATEGORY_FILTER}>Inicio</option>
                         {categories.map((cat) => (
                             <option key={cat.id} value={cat.name}>
-                                {"— ".repeat(cat.level || 0)}{cat.name}
+                                {cat.level > 0 ? `${cat.emoji} ${cat.name}` : cat.name}
                             </option>
                         ))}
                     </select>
@@ -2559,8 +2570,12 @@ export default function AdminProducts() {
                         >
                             <option value="">Selecciona categoría</option>
                             {PERFUME_CATEGORY_DEFINITIONS.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                    {"— ".repeat(category.level || 0)}{category.name}
+                                <option
+                                    key={category.id}
+                                    value={category.id}
+                                    disabled={category.children?.length > 0}
+                                >
+                                    {category.level > 0 ? `${category.emoji} ${category.name}` : category.name}
                                 </option>
                             ))}
                         </select>
