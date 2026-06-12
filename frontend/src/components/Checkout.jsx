@@ -210,7 +210,7 @@ const Checkout = () => {
 
     const [preferenceId, setPreferenceId] = useState(null)
     const [loading, setLoading] = useState(false)
-    const [paymentMethod, setPaymentMethod] = useState('')
+    const [paymentMethod, setPaymentMethod] = useState('coordinar')
 
     // Totales
     const subtotal = store.cart?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0
@@ -231,18 +231,13 @@ const Checkout = () => {
 
 
 
-    // Normalizamos la ciudad para evitar mayúsculas/minúsculas
-    // Normalizamos la ciudad
-    const billingCity = (billing.city || "").trim().toLowerCase();
-
     // 🚚 Costo de envío
-    let shippingCost = 5000;
+    let shippingCost = 0;
+    const shippingMode = pickup ? "pickup" : "coordinar";
+    const shippingLabel = pickup ? "Retiro en local" : "A coordinar";
 
     if (pickup) {
         // Caso 1: retiro en tienda
-        shippingCost = 0;
-    } else if (billingCity.includes("las varillas")) {
-        // Caso 2: vive en Las Varillas (envío gratis)
         shippingCost = 0;
     }
 
@@ -351,16 +346,12 @@ const Checkout = () => {
                 billing_address: billing,
                 pickup: pickup,
                 shipping_address: {
-                    mode: pickup ? "pickup" : "delivery",
-                    label: pickup
-                        ? "Retiro en local"
-                        : billingCity.includes("las varillas")
-                            ? "Envío a domicilio (Las Varillas - Gratis)"
-                            : "Envío a domicilio (Gratis)",
+                    mode: shippingMode,
+                    label: shippingLabel,
                     address: billing.address,
                     apartment: billing.apartment || "",
-                    city: billing.city || "Las Varillas",
-                    province: billing.province || "Córdoba",
+                    city: billing.city || "",
+                    province: billing.province || "",
                     country: billing.country || "Argentina",
                     postalCode: billing.zipCode || "",
                     phone: billing.phone || "",
@@ -520,9 +511,6 @@ const Checkout = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
                                     required
                                 />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Envíos <span className="font-semibold text-green-600">gratis</span> en Las Varillas
-                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Provincia *</label>
@@ -862,7 +850,11 @@ const Checkout = () => {
                             <div className="flex justify-between">
                                 <span>Envío:</span>
                                 <span className={shippingCost === 0 ? "text-green-600" : ""}>
-                                    {shippingCost === 0 ? "Gratis" : `$${shippingCost.toLocaleString()}`}
+                                    {shippingMode === "coordinar"
+                                        ? "A coordinar"
+                                        : shippingCost === 0
+                                            ? "Gratis"
+                                            : `$${shippingCost.toLocaleString()}`}
                                 </span>
                             </div>
 
@@ -1066,16 +1058,12 @@ const Checkout = () => {
                                                 },
 
                                                 shipping_address: {
-                                                    mode: pickup ? "pickup" : "delivery",
-                                                    label: pickup
-                                                        ? "Retiro en local"
-                                                        : billingCity.includes("las varillas")
-                                                            ? "Envío a domicilio (Las Varillas - Gratis)"
-                                                            : "Envío a domicilio (Gratis)",
+                                                    mode: shippingMode,
+                                                    label: shippingLabel,
                                                     address: billing.address,
                                                     apartment: billing.apartment || "",
-                                                    city: billing.city || "Las Varillas",
-                                                    province: billing.province || "Córdoba",
+                                                    city: billing.city || "",
+                                                    province: billing.province || "",
                                                     country: billing.country || "Argentina",
                                                     postalCode: billing.zipCode || "",
                                                     phone: billing.phone || "",

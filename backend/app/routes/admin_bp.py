@@ -88,6 +88,8 @@ def _normalize_featured_product_ids(value):
     return ids
 
 def _serialize_admin_order(order):
+    billing_address = dict(order.billing_address or {}) if isinstance(order.billing_address, dict) else order.billing_address
+
     return {
         "id": order.id,
         "status": order.status,
@@ -102,8 +104,9 @@ def _serialize_admin_order(order):
         "customer_email": order.customer_email,
         "customer_phone": order.customer_phone,
         "customer_comment": order.customer_comment,
+        "coupon": billing_address.get("coupon") if isinstance(billing_address, dict) else None,
         "shipping_address": order.shipping_address,
-        "billing_address": order.billing_address,
+        "billing_address": billing_address,
         "created_at": order.created_at.isoformat() if order.created_at else None,
         "order_items": [item.serialize() for item in order.order_items],
         "customer_dni": order.customer_dni,

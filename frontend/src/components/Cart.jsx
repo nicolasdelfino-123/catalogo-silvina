@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Context } from "../js/store/appContext.jsx";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { storeConfig } from "../config/storeConfig.js";
+import CuponBox from "./cart/CuponBox.jsx";
+import { normalizeCouponCode, validateCoupon } from "../utils/coupons.js";
 
 
 const API = import.meta.env.VITE_BACKEND_URL?.replace(/\/+$/, "") || "";
@@ -71,16 +73,23 @@ export default function Cart({ isOpen: controlledOpen, onClose: controlledOnClos
 
   const [customerData, setCustomerData] = useState(() => {
     const saved = localStorage.getItem("customerData");
-    const defaults = { name: "", phone: "", zone: "", payment: "" };
+    const defaults = { name: "", phone: "", zone: "", payment: "Coordinar" };
 
     if (!saved) return defaults;
 
     try {
-      return { ...defaults, ...JSON.parse(saved) };
+      const savedData = JSON.parse(saved);
+      delete savedData.coupon;
+      const parsed = { ...defaults, ...savedData };
+      return { ...parsed, payment: "Coordinar" };
     } catch {
       return defaults;
     }
   });
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponStatus, setCouponStatus] = useState(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -129,6 +138,78 @@ export default function Cart({ isOpen: controlledOpen, onClose: controlledOnClos
     return sum + price * (Number(item.quantity) || 0);
   }, 0);
 
+  const couponTotals = appliedCoupon
+    ? (() => {
+      const subtotal = Math.round(total);
+      const percent = Number(appliedCoupon.percent) || 0;
+      const discount = Math.round(subtotal * percent / 100);
+
+      return {
+        ...appliedCoupon,
+        subtotal,
+        discount,
+        total: Math.max(0, subtotal - discount),
+      };
+    })()
+    : null;
+
+  const finalTotal = couponTotals ? couponTotals.total : Math.round(total);
+
+  const applyCoupon = async () => {
+    const code = normalizeCouponCode(couponCode);
+
+    if (!code) {
+      setCouponStatus({ type: "error", message: "Ingresá un cupón" });
+      return;
+    }
+
+    if (total <= 0) {
+      setCouponStatus({ type: "error", message: "El cupón se aplica a productos con precio" });
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponStatus(null);
+
+    try {
+      const result = await validateCoupon({ code, subtotal: total });
+
+      if (!result.valid) {
+        setAppliedCoupon(null);
+        setCouponStatus({ type: "error", message: result.error || "Cupón inválido o inactivo" });
+        return;
+      }
+
+      setCouponCode(result.code);
+      setAppliedCoupon(result);
+      setCouponStatus({ type: "success", message: "Cupón aplicado" });
+    } catch (error) {
+      console.error("Error validando cupón:", error);
+      setAppliedCoupon(null);
+      setCouponStatus({ type: "error", message: "No se pudo validar el cupón" });
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponStatus(null);
+    setCouponCode("");
+
+    setCustomerData((prev) => {
+      const next = { ...prev };
+      delete next.coupon;
+      localStorage.setItem("customerData", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!showCheckout) return;
+    setCustomerData((prev) => ({ ...prev, payment: "Coordinar" }));
+  }, [showCheckout]);
+
 
   const buildWhatsAppMessage = () => {
     if (!store.cart || store.cart.length === 0) return "";
@@ -172,6 +253,10 @@ export default function Cart({ isOpen: controlledOpen, onClose: controlledOnClos
 
     if (hasUnknownPrice) {
       message += "*TOTAL:* Consultar\n\n";
+    } else if (couponTotals) {
+      message += `*Subtotal original:* ~${pricePrefix}${Math.round(total).toLocaleString("es-AR")}~\n`;
+      message += `*Cupón ${couponTotals.code} (${couponTotals.percent}% OFF):* -${pricePrefix}${couponTotals.discount.toLocaleString("es-AR")}\n`;
+      message += `*TOTAL CON DESCUENTO:* ${pricePrefix}${couponTotals.total.toLocaleString("es-AR")}\n\n`;
     } else {
       message += `*TOTAL:* ${pricePrefix}${total.toLocaleString("es-AR")}\n\n`;
     }
@@ -206,14 +291,19 @@ export default function Cart({ isOpen: controlledOpen, onClose: controlledOnClos
       return;
     }
 
-    if (!customerData.name.trim() || !customerData.phone.trim() || !customerData.zone.trim() || !customerData.payment.trim()) {
+    if (!customerData.name.trim() || !customerData.phone.trim() || !customerData.zone.trim()) {
       alert("Por favor completá tus datos");
       return;
     }
 
     setSendingOrder(true);
 
-    localStorage.setItem("customerData", JSON.stringify(customerData));
+    const customerDataToSave = { ...customerData };
+    delete customerDataToSave.coupon;
+    localStorage.setItem("customerData", JSON.stringify({
+      ...customerDataToSave,
+      payment: "Coordinar",
+    }));
 
     const orderText = buildWhatsAppMessage();
 
@@ -225,6 +315,7 @@ Nombre: ${customerData.name}
 Teléfono: ${customerData.phone}
 Localidad / Zona: ${customerData.zone}
 Pago: ${customerData.payment}
+${couponTotals ? `Cupón aplicado: ${couponTotals.code} (${couponTotals.percent}% OFF)` : ""}
 
 `;
 
@@ -245,13 +336,6 @@ Pago: ${customerData.payment}
       selected_flavor: item.selectedFlavor || null,
       selected_size_ml: getSelectedMl(item)
     }));
-
-
-    // 🔹 calcular total
-    const totalAmount = orderItems.reduce(
-      (sum, i) => sum + i.price * i.quantity,
-      0
-    );
 
     const whatsappUrl = buildWhatsAppUrl(whatsappPhone, finalMessage);
     const whatsappFallbackUrl = buildWhatsAppWebUrl(whatsappPhone, finalMessage);
@@ -279,13 +363,16 @@ Pago: ${customerData.payment}
         customer_last_name: "",
         customer_phone: customerData.phone,
         shipping_address: {
+          mode: "coordinar",
           city: customerData.zone,
-          label: customerData.zone,
+          label: "A coordinar",
           phone: customerData.phone
         },
         payment_method: customerData.payment,
         order_items: orderItems,
-        total_amount: totalAmount,
+        total_amount: finalTotal,
+        coupon_code: couponTotals?.code || null,
+        billing_address: couponTotals ? { coupon: couponTotals } : {},
         status: "pendiente"
       })
     });
@@ -295,6 +382,7 @@ Pago: ${customerData.payment}
       status: "saving"
     });
     setShowCheckout(false);
+    clearCoupon();
     redirectToWhatsApp();
 
     try {
@@ -482,6 +570,24 @@ Pago: ${customerData.payment}
           </span>
         </div>
 
+        {store.cart && store.cart.length > 0 && (
+          <CuponBox
+            code={couponCode}
+            onCodeChange={(value) => {
+              setCouponCode(normalizeCouponCode(value));
+              if (appliedCoupon) setAppliedCoupon(null);
+              if (couponStatus) setCouponStatus(null);
+            }}
+            onApply={applyCoupon}
+            onClear={clearCoupon}
+            appliedCoupon={couponTotals}
+            status={couponStatus}
+            loading={validatingCoupon}
+            subtotal={total}
+            pricePrefix={pricePrefix}
+          />
+        )}
+
 
 
 
@@ -521,7 +627,12 @@ Pago: ${customerData.payment}
           <div className="flex items-center justify-between mb-4">
             <span className="text-xl font-semibold">Total:</span>
             <span className="text-2xl font-semibold text-gray-900 font-serif tracking-wide">
-              {pricePrefix}{total.toLocaleString("es-AR")}
+              {couponTotals && (
+                <span className="block text-sm font-normal text-gray-400 line-through">
+                  {pricePrefix}{Math.round(total).toLocaleString("es-AR")}
+                </span>
+              )}
+              {pricePrefix}{finalTotal.toLocaleString("es-AR")}
             </span>
           </div>
 
@@ -727,6 +838,7 @@ Pago: ${customerData.payment}
               <button
                 onClick={() => {
                   actions.clearCart?.();
+                  clearCoupon();
                   setWhatsappOrderPrompt(null);
                   setShowCheckout(false);
                 }}

@@ -9,6 +9,7 @@ import json
 from sqlalchemy import text
 from sqlalchemy.orm.attributes import flag_modified
 from app.category_config import PERFUME_CATEGORY_DEFINITIONS
+from app.coupon_store import calculate_discount
 
 import smtplib
 import os
@@ -229,6 +230,36 @@ def create_order():
         if not isinstance(shipping_address, dict):
             shipping_address = {"address": str(shipping_address)}
 
+        billing_address = data.get("billing_address") or {}
+        if not isinstance(billing_address, dict):
+            billing_address = {}
+
+        coupon_code = str(
+            data.get("coupon_code")
+            or data.get("coupon")
+            or shipping_address.get("coupon")
+            or ""
+        ).strip()
+        shipping_address.pop("coupon", None)
+
+        subtotal_amount = 0
+        for item in data.get("order_items", []):
+            try:
+                qty = int(item.get("quantity", 1) or 1)
+            except (TypeError, ValueError):
+                qty = 1
+
+            try:
+                price = float(item.get("price") or 0)
+            except (TypeError, ValueError):
+                price = 0
+
+            subtotal_amount += max(0, qty) * max(0, price)
+
+        coupon_snapshot = calculate_discount(subtotal_amount, coupon_code) if coupon_code else None
+        if coupon_snapshot:
+            billing_address["coupon"] = coupon_snapshot
+
         customer_phone = (
             data.get("customer_phone")
             or data.get("phone")
@@ -236,11 +267,12 @@ def create_order():
         )
 
         order = Order(
-            total_amount=float(data.get("total_amount") or 0),
+            total_amount=float(coupon_snapshot["total"] if coupon_snapshot else round(subtotal_amount)),
             payment_method=data.get("payment_method") or "coordinar",
             customer_first_name=data.get("customer_first_name"),
             customer_phone=customer_phone,
             shipping_address=shipping_address,
+            billing_address=billing_address,
             status="pending"
         )
 

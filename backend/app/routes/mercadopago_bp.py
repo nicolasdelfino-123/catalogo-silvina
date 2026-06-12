@@ -495,7 +495,7 @@ def create_order_from_payment(payment_data):
         # ✅ Si el frontend envió el modo de entrega, usamos texto legible
       # ✅ Si el frontend no manda label, lo determinamos acá
         pickup = shipping_address.get("pickup", False) if isinstance(shipping_address, dict) else False
-        mode = shipping_address.get("mode", "delivery") if isinstance(shipping_address, dict) else "delivery"
+        mode = shipping_address.get("mode", "coordinar") if isinstance(shipping_address, dict) else "coordinar"
         print(f"[DEBUG] pickup recibido: {pickup}, mode: {mode}")
 
           # ✅ Normalizar código postal y teléfono dentro del shipping_address
@@ -504,7 +504,7 @@ def create_order_from_payment(payment_data):
             shipping_address = {"address": str(shipping_address)}
 
         shipping_normalized = {
-            "label": shipping_address.get("label") or ("Retiro en local" if mode == "pickup" else "Entrega a domicilio"),
+            "label": shipping_address.get("label") or ("Retiro en local" if mode == "pickup" else "A coordinar"),
             "address": shipping_address.get("address"),
             "apartment": shipping_address.get("apartment"),
             "city": shipping_address.get("city"),
@@ -533,12 +533,10 @@ def create_order_from_payment(payment_data):
 
         if pickup or mode == "pickup":
             shipping_text = "Retiro en local"
+        elif mode == "coordinar":
+            shipping_text = "A coordinar"
         else:
-            city = (shipping_address.get("city") or "").strip().lower()
-            if "varillas" in city:
-                shipping_text = "Envío a domicilio (Las Varillas - Gratis)"
-            else:
-                shipping_text = "Envío a domicilio"
+            shipping_text = shipping_address.get("label") or "A coordinar"
 
 
 
@@ -805,7 +803,7 @@ def create_manual_order():
         }
 
         shipping_normalized = {
-            "label": shipping.get("label") or "Entrega a domicilio",
+            "label": shipping.get("label") or "A coordinar",
             "address": shipping.get("address"),
             "apartment": shipping.get("apartment"),
             "city": shipping.get("city"),
@@ -813,7 +811,7 @@ def create_manual_order():
             "country": shipping.get("country"),
             "postalCode": shipping.get("postalCode") or shipping.get("zip_code"),
             "cost": shipping.get("cost") or 0,
-            "mode": shipping.get("mode") or "delivery",
+            "mode": shipping.get("mode") or "coordinar",
             "phone": shipping.get("phone") or billing.get("phone"),
             "dni": shipping.get("dni") or billing.get("dni"),
             "email": shipping.get("email") or billing.get("email"),
@@ -929,12 +927,10 @@ def create_manual_order():
             pickup = shipping_normalized.get("pickup", False) or shipping_normalized.get("mode") == "pickup"
             if pickup:
                 shipping_label = "Retiro en local"
+            elif shipping_normalized.get("mode") == "coordinar":
+                shipping_label = "A coordinar"
             else:
-                city = (shipping_normalized.get("city") or "").strip().lower()
-                if "varillas" in city:
-                    shipping_label = "Envío a domicilio (Las Varillas - Gratis)"
-                else:
-                    shipping_label = "Envío a domicilio"
+                shipping_label = shipping_normalized.get("label") or "A coordinar"
 
 
             client_html = build_order_email_html(

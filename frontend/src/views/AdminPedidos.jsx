@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import { formatCouponMoney, getCouponFromOrder } from "../utils/coupons.js";
 
 const API = import.meta.env.VITE_BACKEND_URL?.replace(/\/+$/, "") || "";
 
@@ -200,6 +201,7 @@ export default function AdminPedidos() {
                 // detectar mayorista: si los precios parecen mayoristas
                 const isWholesale = items.some(i => i.price && i.price < 1000);
                 const currency = isWholesale ? "$" : "$";
+                const coupon = getCouponFromOrder(selected);
                 const customerPhone =
                     selected.customer_phone ||
                     selected.shipping_address?.phone ||
@@ -245,6 +247,12 @@ export default function AdminPedidos() {
                                         coordinar: "A coordinar",
                                     }[selected.payment_method] || selected.payment_method}
                                 </p>
+
+                                {coupon && (
+                                    <p>
+                                        <strong>Cupón:</strong> {coupon.code} ({coupon.percent}% OFF)
+                                    </p>
+                                )}
                             </div>
 
                             {/* ENVÍO */}
@@ -318,13 +326,35 @@ export default function AdminPedidos() {
                                     </tbody>
 
                                     <tfoot>
+                                        {coupon && (
+                                            <>
+                                                <tr className="border-t text-gray-500">
+                                                    <td colSpan="3" className="p-2 text-right">
+                                                        Subtotal original
+                                                    </td>
+                                                    <td className="p-2 text-right line-through">
+                                                        {currency}{formatCouponMoney(coupon.subtotal)}
+                                                    </td>
+                                                </tr>
+
+                                                <tr className="text-emerald-700">
+                                                    <td colSpan="3" className="p-2 text-right">
+                                                        Descuento {coupon.code}
+                                                    </td>
+                                                    <td className="p-2 text-right">
+                                                        -{currency}{formatCouponMoney(coupon.discount)}
+                                                    </td>
+                                                </tr>
+                                            </>
+                                        )}
+
                                         <tr className="border-t font-semibold">
                                             <td colSpan="3" className="p-2 text-right">
-                                                Total
+                                                {coupon ? "Total con descuento" : "Total"}
                                             </td>
 
                                             <td className="p-2 text-right">
-                                                {currency}{selected.total_amount?.toLocaleString() || 0}
+                                                {currency}{formatCouponMoney(selected.total_amount)}
                                             </td>
                                         </tr>
                                     </tfoot>
