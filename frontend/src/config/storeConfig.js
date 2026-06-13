@@ -4,9 +4,9 @@ export const storeConfig = {
     features: {
         showHeaderContact: true,
         showBrandCarousel: true,
-        coupon: true,
-        headerTheme: "black", // "black" | "white"
-        footerTheme: "black", // "black" | "white"
+        coupon: false,
+        headerTheme: "white", // "black" | "white"
+        footerTheme: "white", // "black" | "white"
     },
 
     appearance: {
@@ -19,7 +19,7 @@ export const storeConfig = {
         footer: {
             colors: {
                 white: "#ffffff",
-                black: "#0b0b0d",
+                black: "#adadbeff",
             },
         },
     },
@@ -44,8 +44,8 @@ export const storeConfig = {
             imageMaxWidth: "100%",
             imageHeight: "auto",
             imageMinHeight: "auto",
-            imageMaxHeight: "calc(100vh - 80px)",
-            imageFit: "cover", // "contain" no recorta | "cover" llena y puede recortar
+            imageMaxHeight: "none",
+            imageFit: "contain", // "contain" no recorta | "cover" llena y puede recortar
             imagePosition: "center center",
             imageOffsetX: "0px",
             imageOffsetY: "0px",
@@ -53,7 +53,7 @@ export const storeConfig = {
 
         mobile: {
             // En mobile el header es fixed; este padding evita que el hero quede debajo.
-            sectionPaddingTop: "80px",
+            sectionPaddingTop: "0px",
             sectionPaddingBottom: "0px",
             sectionMarginTop: "0px",
             sectionMarginBottom: "0px",
@@ -107,25 +107,21 @@ export const storeConfig = {
         // slug es opcional; si no lo ponés, usa el slug técnico definido en perfumeCategories o lo genera desde el label.
         categories: [
             {
-                id: 1,
-                label: "Perfumes",
-                slug: "perfumes",
+                id: 4,
+                label: "Perfumes Árabes",
+                slug: "perfumes-arabes",
                 emoji: "✨",
                 children: [
-                    { id: 3, label: "Femeninos", slug: "femeninos", emoji: "🌸" },
-                    { id: 4, label: "Masculinos", slug: "masculinos", emoji: "🖤" },
-                    { id: 5, label: "Unisex", slug: "unisex", emoji: "✨" },
+                    { id: 1, label: "Masculinos", slug: "masculinos", emoji: "🖤" },
+                    { id: 2, label: "Femeninos", slug: "femeninos", emoji: "🌸" },
+                    { id: 3, label: "Unisex", slug: "unisex", emoji: "✨" },
                 ],
             },
             {
-                id: 2,
-                label: "Gafas",
-                slug: "gafas",
-                emoji: "🕶️",
-                children: [
-                    { id: 6, label: "Ray-Ban", slug: "ray-ban", emoji: "🕶️" },
-                    { id: 7, label: "Scuderia Ferrari", slug: "scuderia-ferrari", emoji: "🏎️" },
-                ],
+                id: 5,
+                label: "Perfumes de Diseñador",
+                slug: "perfumes-disenador",
+                emoji: "🌟",
             },
         ],
     },
@@ -137,35 +133,35 @@ export const storeConfig = {
     },
 
     contact: {
-        whatsapp: "5493534793366",
+        whatsapp: "5493462569834",
         whatsappMessage: "Hola, quiero consultar por un perfume del catálogo",
-        whatsappDisplay: "+56 9 6407 7278",
+        whatsappDisplay: "+54 9 3462 56-9834",
 
-        instagram: "https://www.instagram.com/danna_decants_puq/",
-        instagramDisplay: "@danna_decants_puq",
+        instagram: "https://www.instagram.com/silari.importados/",
+        instagramDisplay: "@silari.importados",
 
         email: "nicolasdelfino585@gmail.com",
         /*  emailDisplay: "nicolasdelfino585@gmail.com", */
     },
 
     business: {
-        address: "Stand Mall Espacio Urbano Pionero",
-        city: "Segundo piso (casi al lado de Tarragona)",
-        hours: "Lunes a Sábado 10:30–20:30 - Domingo 11:00–20:00",
+        address: "Santa Fe 490 Venado Tuerto ",
+        city: "",
+        hours: "Lunes a Viernes de 9 a 12 y de 16 a 19\nSábados de 10 a 12:30 y de 17 a 20",
     },
 
     media: {
         // Hero desktop: se carga desde frontend/public. Escribi solo el nombre del archivo o una ruta publica, por ejemplo "f3_si.png".
-        heroImageDesktop: "f3_si.png",
+        heroImageDesktop: "banner_desktop.png",
         // Hero mobile: se carga desde frontend/public. Escribi solo el nombre del archivo o una ruta publica, por ejemplo "f3_si.png".
-        heroImageMobile: "f3_si.png",
+        heroImageMobile: "banner_cel.png",
         // GIF del GlobalSpinner: se carga desde frontend/public. Si queres cambiarlo, pone el GIF en public y actualiza este nombre.
-        globalSpinnerGif: "danna_spinner.gif",
-        headerLogo: "logo_attar_prueba.png",
-        footerLogo: "logo_danna.jpeg",
+        globalSpinnerGif: "spin_sil.gif",
+        headerLogo: "logo_header.png",
+        footerLogo: "logo_header.png",
     },
 
     map: {
-        embed: "https://www.google.com/maps?q=-53.1315202,-70.9090699&z=17&output=embed",
+        embed: "https://www.google.com/maps?q=-33.7443469,-61.9570568&z=17&output=embed",
     }
 };

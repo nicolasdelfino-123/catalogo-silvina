@@ -10,6 +10,7 @@ import AdminBudgetModal from "../components/admin/AdminBudgetModal.jsx";
 import {
     CATEGORY_ID_TO_NAME as ID_TO_CATEGORY_NAME,
     getDisplayCategoryName,
+    getNormalizedCategoryId,
     mapCategoryIdFromName,
     PERFUME_CATEGORY_DEFINITIONS,
 } from "../utils/perfumeCategories.js";
@@ -413,12 +414,18 @@ const isParentCategoryId = (categoryId) => {
     return Boolean(category?.children?.length);
 };
 
+const getCategoryFilterIds = (category) => {
+    if (!category) return [];
+    const childIds = (category.children || []).flatMap(getCategoryFilterIds);
+    return childIds.length ? childIds : [Number(category.id)];
+};
+
 // ----- Componente principal -----
 export default function AdminProducts() {
     const couponEnabled = storeConfig.features?.coupon === true;
     const [products, setProducts] = useState([])
     const categories = PERFUME_CATEGORY_DEFINITIONS
-    const defaultCategory = PERFUME_CATEGORY_DEFINITIONS[0]
+    const defaultCategory = PERFUME_CATEGORY_DEFINITIONS.find((category) => !category.children?.length)
     const defaultCategoryId = defaultCategory?.id || 1
     const defaultCategoryName = defaultCategory?.name || "Sin categoría"
     const [form, setForm] = useState(null)
@@ -969,7 +976,14 @@ export default function AdminProducts() {
             const wasFeatured = currentProductId ? featuredProductIds.includes(currentProductId) : false;
             const wantsFeatured = Boolean(form.show_on_home);
 
-            if (isParentCategoryId(form.category_id)) {
+            const selectedCategoryId = Number(form.category_id);
+
+            if (!Number.isFinite(selectedCategoryId)) {
+                alert("Debes seleccionar una categoría.");
+                return;
+            }
+
+            if (isParentCategoryId(selectedCategoryId)) {
                 alert("Debes seleccionar una subcategoría.");
                 return;
             }
@@ -1253,12 +1267,17 @@ export default function AdminProducts() {
             p.name?.toLowerCase().includes(q.toLowerCase()) ||
             p.brand?.toLowerCase().includes(q.toLowerCase());
 
+        const selectedCatalogCategory = PERFUME_CATEGORY_DEFINITIONS.find(
+            (category) => normalizeCategoryLabel(category.name) === normalizeCategoryLabel(selectedCategory)
+        );
+        const selectedCategoryIds = getCategoryFilterIds(selectedCatalogCategory);
+        const productCategoryId = getNormalizedCategoryId(p);
         const matchesCategory =
             selectedCategory === "Todos" ||
             (selectedCategory === HOME_CATEGORY_FILTER && featuredProductIds.includes(Number(p.id))) ||
             (
                 selectedCategory !== HOME_CATEGORY_FILTER &&
-                normalizeCategoryLabel(getDisplayCategoryName(p)) === normalizeCategoryLabel(selectedCategory)
+                selectedCategoryIds.includes(productCategoryId)
             );
 
         const isActive = Boolean(p?.is_active);
@@ -1431,8 +1450,8 @@ export default function AdminProducts() {
                 />
                 <button
                     onClick={() => setForm({
-                        category_id: defaultCategoryId,
-                        category_name: defaultCategoryName,
+                        category_id: "",
+                        category_name: "",
                         is_active: true,
 
                         image_url: "",

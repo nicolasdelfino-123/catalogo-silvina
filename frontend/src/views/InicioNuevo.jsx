@@ -168,6 +168,8 @@ export default function InicioNuevo() {
                     <img
                         src={heroImageMobile}
                         alt="banner"
+                        width="1024"
+                        height="1536"
                         className="mx-auto block brightness-110 saturate-110"
                         style={buildHeroImageStyle(mobileHero, {
                             imageWidth: "100%",
@@ -214,6 +216,8 @@ export default function InicioNuevo() {
                     <img
                         src={heroImageDesktop}
                         alt="banner"
+                        width="1774"
+                        height="887"
                         className="mx-auto block brightness-110 saturate-110"
                         style={buildHeroImageStyle(desktopHero, {
                             imageWidth: "100%",
@@ -294,7 +298,7 @@ export default function InicioNuevo() {
             <section className="max-w-7xl mx-auto px-2 sm:px-4 py-12">
                 <div className="text-center mb-10">
                     <h2 className="text-2xl md:text-3xl font-serif font-semibold tracking-wide">
-                        Productos destacados
+                        Productos Destacados
                     </h2>
 
                     <div className="w-16 h-[2px] bg-amber-500 mx-auto mt-4"></div>
@@ -356,9 +360,9 @@ shadow-lg shadow-amber-500/20
                         <p className="mt-2 text-lg text-gray-500">
                             {ADDRESS_CITY.replace(ADDRESS_CITY.split(",")[0] + ", ", "")}
                         </p>
-                        <p className="mt-2 text-lg text-gray-500">Punta Arenas</p>
 
-                        <p className="mt-2 text-gray-600">{HOURS}</p>
+
+                        <p className="mt-2 text-gray-600 whitespace-pre-line">{HOURS}</p>
 
                         <div className="mt-6 flex justify-center md:justify-center gap-4">
 
@@ -411,7 +415,7 @@ shadow-lg shadow-amber-500/20
                             </div>
                         </div>
                         <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ADDRESS)}`}
+                            href="https://www.google.com/maps/search/?api=1&query=-33.7443469,-61.9570568"
                             target="_blank"
                             rel="noreferrer"
                             className="mt-3 inline-block text-sm text-purple-600 hover:text-purple-800"
