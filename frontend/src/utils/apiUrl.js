@@ -27,3 +27,27 @@ export const getApiUrl = () => {
 
     return normalizedUrl;
 };
+
+export const withFreshParam = (url) => {
+    const separator = String(url).includes("?") ? "&" : "?";
+    return `${url}${separator}_=${Date.now()}`;
+};
+
+export const fetchFreshJson = async (url, options = {}) => {
+    const response = await fetch(withFreshParam(url), {
+        cache: "no-store",
+        ...options,
+        headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+            ...(options.headers || {}),
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`[${response.status}] ${response.statusText || "Error al obtener datos"}`);
+    }
+
+    return response.json();
+};

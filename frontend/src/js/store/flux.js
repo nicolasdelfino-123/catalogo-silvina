@@ -1,5 +1,5 @@
 import { PERFUME_CATEGORY_NAMES } from "../../utils/perfumeCategories.js";
-import { getApiUrl } from "../../utils/apiUrl.js";
+import { fetchFreshJson, getApiUrl } from "../../utils/apiUrl.js";
 
 const backendUrl = getApiUrl();
 
@@ -262,11 +262,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ ...store, loading: true });
 
 				try {
-					const response = await fetch(`${backendUrl}/public/categories`);
-					if (!response.ok) {
-						throw new Error('Error al obtener categorías');
-					}
-					const categories = await response.json();
+					const categories = await fetchFreshJson(`${backendUrl}/public/categories`);
 					const categoryNames = categories.map(cat => cat.name);
 					setStore({ ...store, categories: categoryNames, loading: false });
 					return { success: true, data: categoryNames };
@@ -556,11 +552,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ ...store, loading: true });
 
 				try {
-					const response = await fetch(`${backendUrl}/public/categories`);
-					if (!response.ok) {
-						throw new Error('Error al obtener categorías');
-					}
-					const categories = await response.json();
+					const categories = await fetchFreshJson(`${backendUrl}/public/categories`);
 					setStore({ ...store, categories, loading: false });
 					return { success: true, data: categories };
 				} catch (error) {
@@ -576,11 +568,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 				setStore({ ...store, loading: true });
 
 				try {
-					const response = await fetch(`${backendUrl}/public/products`);
-					if (!response.ok) {
-						throw new Error('Error al obtener productos');
-					}
-					const products = await response.json();
+					const products = await fetchFreshJson(`${backendUrl}/public/products`);
 					setStore({ ...store, products, loading: false });
 					return { success: true, data: products };
 				} catch (error) {

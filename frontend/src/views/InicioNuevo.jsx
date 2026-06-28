@@ -6,7 +6,7 @@ import HomeContact from "../components/home/HomeContact.jsx";
 import Asesoria from "../components/Asesoria.jsx";
 import { storeConfig } from "../config/storeConfig";
 import { getNormalizedCategoryId, mapCategoryIdFromName } from "../utils/perfumeCategories.js";
-import { getApiUrl } from "../utils/apiUrl.js";
+import { fetchFreshJson, getApiUrl } from "../utils/apiUrl.js";
 
 import afnan from '../assets/afnan.webp'
 import al from '../assets/al.webp'
@@ -72,8 +72,7 @@ export default function InicioNuevo() {
         if (actions?.fetchProducts) {
             actions.fetchProducts();
         }
-        fetch(`${API}/public/home-featured-products`)
-            .then((res) => (res.ok ? res.json() : { product_ids: [] }))
+        fetchFreshJson(`${API}/public/home-featured-products`)
             .then((data) => {
                 setHomeFeaturedIds((data?.product_ids || []).map(Number));
             })

@@ -4,6 +4,7 @@ import sinImagen from '@/assets/sin_imagen.jpg'
 import { Link, useNavigate } from "react-router-dom";
 import { formatPrice } from "../utils/price.js";
 import { storeConfig } from "../config/storeConfig.js";
+import { fetchFreshJson } from "../utils/apiUrl.js";
 import AdminBudgetToolbar from "../components/admin/AdminBudgetToolbar.jsx";
 import AdminBudgetSelectionCell from "../components/admin/AdminBudgetSelectionCell.jsx";
 import AdminBudgetModal from "../components/admin/AdminBudgetModal.jsx";
@@ -491,27 +492,24 @@ export default function AdminProducts() {
 
     const fetchAll = async () => {
         try {
-            const [productsRes, featuredRes] = await Promise.all([
-                fetch(`${API}/admin/products`, {
+            const [productsResult, featuredResult] = await Promise.allSettled([
+                fetchFreshJson(`${API}/admin/products`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
-                fetch(`${API}/admin/home-featured-products`, {
+                fetchFreshJson(`${API}/admin/home-featured-products`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
             ])
 
-            let visibleProductIds = null;
-            if (productsRes.ok) {
-                const data = await productsRes.json()
-                setProducts(data || [])
-                visibleProductIds = new Set((data || []).map((product) => Number(product.id)));
-            }
+            if (productsResult.status !== "fulfilled") throw productsResult.reason;
 
-            if (featuredRes.ok) {
-                const data = await featuredRes.json()
-                const ids = (data?.product_ids || []).map(Number);
-                setFeaturedProductIds(visibleProductIds ? ids.filter((id) => visibleProductIds.has(id)) : ids)
-            }
+            const productsList = productsResult.value || [];
+            const visibleProductIds = new Set(productsList.map((product) => Number(product.id)));
+            const ids = featuredResult.status === "fulfilled"
+                ? (featuredResult.value?.product_ids || []).map(Number)
+                : [];
+            setProducts(productsList)
+            setFeaturedProductIds(ids.filter((id) => visibleProductIds.has(id)))
         } catch (error) {
             console.error("Error fetching products:", error)
         }

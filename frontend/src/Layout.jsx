@@ -116,6 +116,28 @@ const Layout = () => {
     init();
   }, [actions]);
 
+  useEffect(() => {
+    const refreshProducts = () => {
+      actions.fetchProducts?.();
+    };
+
+    const handlePageShow = (event) => {
+      if (event.persisted) refreshProducts();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshProducts();
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [actions]);
+
 
   return (
     <div>
